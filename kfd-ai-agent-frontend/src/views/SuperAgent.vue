@@ -1,47 +1,69 @@
 <template>
-  <div class="super-agent-container">
-    <div class="header">
-      <div class="back-button" @click="goBack">返回</div>
-      <h1 class="title">AI超级智能体</h1>
-      <div class="placeholder"></div>
+  <main class="chat-page super-page">
+    <div class="page-shell">
+      <header class="page-header">
+        <button class="back-button" type="button" @click="goBack">返回首页</button>
+
+        <div class="title-block">
+          <p class="eyebrow">PROJECT PAGE</p>
+          <h1>AI 超级智能体</h1>
+          <p>通用智能体页面，用于展示更长链路的任务处理与过程化输出。</p>
+        </div>
+
+        <div class="header-pills">
+          <span class="pill">任务执行模式</span>
+          <span class="pill">{{ connectionText }}</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="guide-panel">
+          <span class="panel-title">页面说明</span>
+          <h2>适合测试任务处理与执行过程输出</h2>
+          <p>
+            可以输入任务目标、约束条件或预期结果，用来观察模型在较复杂问题下的输出过程。
+          </p>
+          <div class="tip-list">
+            <span>任务拆解</span>
+            <span>方案生成</span>
+            <span>过程输出</span>
+            <span>问题分析</span>
+          </div>
+        </aside>
+
+        <section class="chat-panel">
+          <ChatRoom
+            :messages="messages"
+            :connection-status="connectionStatus"
+            ai-type="super"
+            @send-message="sendMessage"
+          />
+        </section>
+      </section>
     </div>
-    
-    <div class="content-wrapper">
-      <div class="chat-area">
-        <ChatRoom 
-          :messages="messages" 
-          :connection-status="connectionStatus"
-          ai-type="super"
-          @send-message="sendMessage"
-        />
-      </div>
-    </div>
-    
-    <div class="footer-container">
-      <AppFooter />
-    </div>
-  </div>
+
+    <AppFooter />
+  </main>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHead } from '@vueuse/head'
 import ChatRoom from '../components/ChatRoom.vue'
 import AppFooter from '../components/AppFooter.vue'
 import { chatWithManus } from '../api'
 
-// 设置页面标题和元数据
 useHead({
-  title: 'AI超级智能体 - kfdAI超级智能体应用平台',
+  title: 'AI 超级智能体 - Spring AI 智能体实战项目',
   meta: [
     {
       name: 'description',
-      content: 'AI超级智能体是kfdAI超级智能体应用平台的全能助手，能解答各类专业问题，提供精准建议和解决方案'
+      content: '基于 Spring AI 的通用智能体聊天页，展示多步骤任务与 SSE 流式输出体验。'
     },
     {
       name: 'keywords',
-      content: 'AI超级智能体,智能助手,专业问答,AI问答,专业建议,kfd,AI智能体'
+      content: 'AI 智能体, Tool Calling, SSE, Spring AI'
     }
   ]
 })
@@ -50,237 +72,290 @@ const router = useRouter()
 const messages = ref([])
 const connectionStatus = ref('disconnected')
 let eventSource = null
+const bubbleTimerIds = new Set()
 
-// 添加消息到列表
+const END_PUNCTUATION = ['。', '！', '？', '.', '!', '?']
+const connectionText = computed(() => {
+  if (connectionStatus.value === 'connecting') return '执行中'
+  if (connectionStatus.value === 'error') return '连接异常'
+  return '等待任务'
+})
+
 const addMessage = (content, isUser, type = '') => {
   messages.value.push({
     content,
     isUser,
     type,
-    time: new Date().getTime()
+    time: Date.now()
   })
 }
 
-// 发送消息
-const sendMessage = (message) => {
-  addMessage(message, true, 'user-question')
-  
-  // 连接SSE
+const closeStream = () => {
   if (eventSource) {
     eventSource.close()
-  }
-  
-  // 设置连接状态
-  connectionStatus.value = 'connecting'
-  
-  // 临时存储
-  let messageBuffer = []; // 用于存储SSE消息的缓冲区
-  let lastBubbleTime = Date.now(); // 上一个气泡的创建时间
-  let isFirstResponse = true; // 是否是第一次响应
-  
-  const chineseEndPunctuation = ['。', '！', '？', '…']; // 中文句子结束标点
-  const minBubbleInterval = 800; // 气泡最小间隔时间(毫秒)
-  
-  // 创建消息气泡的函数
-  const createBubble = (content, type = 'ai-answer') => {
-    if (!content.trim()) return;
-    
-    // 添加适当的延迟，使消息显示更自然
-    const now = Date.now();
-    const timeSinceLastBubble = now - lastBubbleTime;
-    
-    if (isFirstResponse) {
-      // 第一条消息立即显示
-      addMessage(content, false, type);
-      isFirstResponse = false;
-    } else if (timeSinceLastBubble < minBubbleInterval) {
-      // 如果与上一气泡间隔太短，添加一个延迟
-      setTimeout(() => {
-        addMessage(content, false, type);
-      }, minBubbleInterval - timeSinceLastBubble);
-    } else {
-      // 正常添加消息
-      addMessage(content, false, type);
-    }
-    
-    lastBubbleTime = now;
-    messageBuffer = []; // 清空缓冲区
-  };
-  
-  eventSource = chatWithManus(message)
-  
-  // 监听SSE消息
-  eventSource.onmessage = (event) => {
-    const data = event.data
-    
-    if (data && data !== '[DONE]') {
-      messageBuffer.push(data);
-      
-      // 检查是否应该创建新气泡
-      const combinedText = messageBuffer.join('');
-      
-      // 句子结束或消息长度达到阈值
-      const lastChar = data.charAt(data.length - 1);
-      const hasCompleteSentence = chineseEndPunctuation.includes(lastChar) || data.includes('\n\n');
-      const isLongEnough = combinedText.length > 40;
-      
-      if (hasCompleteSentence || isLongEnough) {
-        createBubble(combinedText);
-      }
-    }
-    
-    if (data === '[DONE]') {
-      // 如果还有未显示的内容，创建最后一个气泡
-      if (messageBuffer.length > 0) {
-        const remainingContent = messageBuffer.join('');
-        createBubble(remainingContent, 'ai-final');
-      }
-      
-      // 完成后关闭连接
-      connectionStatus.value = 'disconnected'
-      eventSource.close()
-    }
-  }
-  
-  // 监听SSE错误
-  eventSource.onerror = (error) => {
-    console.error('SSE Error:', error)
-    connectionStatus.value = 'error'
-    eventSource.close()
-    
-    // 如果出错时有未显示的内容，也创建气泡
-    if (messageBuffer.length > 0) {
-      const remainingContent = messageBuffer.join('');
-      createBubble(remainingContent, 'ai-error');
-    }
+    eventSource = null
   }
 }
 
-// 返回主页
+const clearBubbleTimers = () => {
+  bubbleTimerIds.forEach((timerId) => window.clearTimeout(timerId))
+  bubbleTimerIds.clear()
+}
+
+const sendMessage = (message) => {
+  addMessage(message, true, 'user-question')
+  clearBubbleTimers()
+  closeStream()
+
+  connectionStatus.value = 'connecting'
+
+  let messageBuffer = []
+  let lastBubbleTime = Date.now()
+  let isFirstResponse = true
+  const minBubbleInterval = 700
+
+  const createBubble = (content, type = 'ai-answer') => {
+    if (!content.trim()) return
+
+    const now = Date.now()
+    const timeSinceLastBubble = now - lastBubbleTime
+    const pushBubble = () => addMessage(content, false, type)
+
+    if (isFirstResponse) {
+      pushBubble()
+      isFirstResponse = false
+    } else if (timeSinceLastBubble < minBubbleInterval) {
+      const timerId = window.setTimeout(() => {
+        pushBubble()
+        bubbleTimerIds.delete(timerId)
+      }, minBubbleInterval - timeSinceLastBubble)
+      bubbleTimerIds.add(timerId)
+    } else {
+      pushBubble()
+    }
+
+    lastBubbleTime = now
+    messageBuffer = []
+  }
+
+  eventSource = chatWithManus(message)
+
+  eventSource.onmessage = (event) => {
+    const data = event.data
+
+    if (data && data !== '[DONE]') {
+      messageBuffer.push(data)
+      const combinedText = messageBuffer.join('')
+      const lastChar = data.charAt(data.length - 1)
+      const hasCompleteSentence = END_PUNCTUATION.includes(lastChar) || data.includes('\n\n')
+      const isLongEnough = combinedText.length > 56
+
+      if (hasCompleteSentence || isLongEnough) {
+        createBubble(combinedText)
+      }
+    }
+
+    if (data === '[DONE]') {
+      if (messageBuffer.length > 0) {
+        createBubble(messageBuffer.join(''), 'ai-final')
+      }
+      connectionStatus.value = 'disconnected'
+      closeStream()
+    }
+  }
+
+  eventSource.onerror = () => {
+    connectionStatus.value = 'error'
+    if (messageBuffer.length > 0) {
+      createBubble(messageBuffer.join(''), 'ai-error')
+    } else {
+      addMessage('连接出现异常，请稍后重试。', false, 'ai-error')
+    }
+    closeStream()
+  }
+}
+
 const goBack = () => {
   router.push('/')
 }
 
-// 页面加载时添加欢迎消息
 onMounted(() => {
-  // 添加欢迎消息
-  addMessage('你好，我是AI超级智能体。我可以解答各类问题，提供专业建议，请问有什么可以帮助你的吗？', false)
+  addMessage(
+    '你好，我是 AI 超级智能体。你可以直接告诉我任务目标、限制条件和预期结果，我会尽量分步骤给出建议或方案。',
+    false,
+    'ai-final'
+  )
 })
 
-// 组件销毁前关闭SSE连接
 onBeforeUnmount(() => {
-  if (eventSource) {
-    eventSource.close()
-  }
+  clearBubbleTimers()
+  closeStream()
 })
 </script>
 
 <style scoped>
-.super-agent-container {
+.chat-page {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #f9fbff;
+  gap: 28px;
+  padding: 28px;
 }
 
-.header {
+.super-page {
+  background:
+    radial-gradient(circle at top right, rgba(15, 108, 120, 0.14), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(53, 95, 148, 0.13), transparent 26%),
+    transparent;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  flex: 1;
+}
+
+.page-header {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(18, 49, 78, 0.08);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+  align-items: start;
+}
+
+.back-button,
+.pill {
+  display: inline-flex;
   align-items: center;
-  padding: 16px 24px;
-  background-color: #3f51b5;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  justify-content: center;
+  border-radius: 999px;
 }
 
 .back-button {
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.2s;
-  justify-self: start;
+  height: fit-content;
+  padding: 12px 16px;
+  background: #142033;
+  color: #fff;
+  font-weight: 700;
 }
 
-.back-button:hover {
-  opacity: 0.8;
+.title-block h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.1;
 }
 
-.back-button:before {
-  content: '←';
-  margin-right: 8px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
+.title-block p:last-child {
   margin: 0;
-  text-align: center;
-  justify-self: center;
+  color: #66768c;
+  line-height: 1.8;
+  max-width: 680px;
 }
 
-.placeholder {
-  width: 1px;
-  justify-self: end;
+.eyebrow,
+.panel-title {
+  display: inline-flex;
+  color: #0f6c78;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
 }
 
-.content-wrapper {
+.header-pills {
   display: flex;
-  flex-direction: column;
-  flex: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.chat-area {
-  flex: 1;
-  padding: 16px;
-  overflow: hidden;
-  position: relative;
-  /* 设置最小高度确保内容显示正常 */
-  min-height: calc(100vh - 56px - 180px); /* 100vh减去头部高度和页脚高度 */
-  margin-bottom: 16px; /* 为页脚留出空间 */
+.pill {
+  padding: 10px 14px;
+  background: rgba(15, 108, 120, 0.1);
+  color: #0f6c78;
+  font-size: 0.9rem;
 }
 
-.footer-container {
-  margin-top: auto;
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
 }
 
-/* 响应式样式 */
-@media (max-width: 768px) {
-  .header {
-    padding: 12px 16px;
+.guide-panel {
+  padding: 24px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(242, 249, 250, 0.92), rgba(236, 243, 251, 0.92));
+  border: 1px solid rgba(15, 108, 120, 0.12);
+  box-shadow: var(--shadow-soft);
+}
+
+.guide-panel h2 {
+  margin: 12px 0 10px;
+  font-size: 1.45rem;
+  line-height: 1.3;
+}
+
+.guide-panel p {
+  margin: 0;
+  color: #6d7686;
+  line-height: 1.8;
+}
+
+.tip-list {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tip-list span {
+  display: inline-flex;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(15, 108, 120, 0.12);
+  color: #0f6c78;
+  font-size: 0.9rem;
+}
+
+.chat-panel {
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  .page-header,
+  .workspace {
+    grid-template-columns: 1fr;
   }
-  
-  .title {
-    font-size: 18px;
-  }
-  
-  .chat-area {
-    padding: 12px;
-    min-height: calc(100vh - 48px - 160px); /* 调整计算值 */
-    margin-bottom: 12px;
+
+  .header-pills {
+    justify-content: flex-start;
   }
 }
 
-@media (max-width: 480px) {
-  .header {
-    padding: 10px 12px;
+@media (max-width: 640px) {
+  .chat-page {
+    padding: 18px;
+    gap: 18px;
   }
-  
-  .back-button {
-    font-size: 14px;
+
+  .page-header,
+  .guide-panel {
+    padding: 20px;
+    border-radius: 24px;
   }
-  
-  .title {
-    font-size: 16px;
-  }
-  
-  .chat-area {
-    padding: 8px;
-    min-height: calc(100vh - 42px - 150px); /* 再次调整计算值 */
-    margin-bottom: 8px;
+
+  .title-block h1 {
+    font-size: 2rem;
   }
 }
-</style> 
+</style>

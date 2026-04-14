@@ -2,15 +2,15 @@ package com.kfd.kfdaiagent.tools;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PDFGenerationToolTest {
 
     @Test
     void generatePDF() {
         PDFGenerationTool tool = new PDFGenerationTool();
-        String fileName = "编程导航原创项目.pdf";
-        String content = "编程导航原创项目 https://www.codefather.cn";
+        String fileName = "date-plan.pdf";
+        String content = "Sample PDF content generated for tool testing.";
         String result = tool.generatePDF(fileName, content);
         assertNotNull(result);
     }

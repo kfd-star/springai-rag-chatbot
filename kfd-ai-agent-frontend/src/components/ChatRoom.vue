@@ -1,59 +1,80 @@
 <template>
-  <div class="chat-container">
-    <!-- 聊天记录区域 -->
-    <div class="chat-messages" ref="messagesContainer">
-      <div v-for="(msg, index) in messages" :key="index" class="message-wrapper">
-        <!-- AI消息 -->
-        <div v-if="!msg.isUser" 
-             class="message ai-message" 
-             :class="[msg.type]">
-          <div class="avatar ai-avatar">
-            <AiAvatarFallback :type="aiType" />
-          </div>
-          <div class="message-bubble">
-            <div class="message-content">
-              {{ msg.content }}
-              <span v-if="connectionStatus === 'connecting' && index === messages.length - 1" class="typing-indicator">▋</span>
-            </div>
-            <div class="message-time">{{ formatTime(msg.time) }}</div>
-          </div>
+  <div class="chat-card">
+    <div class="chat-toolbar">
+      <div class="assistant-meta">
+        <div class="assistant-avatar">
+          <AiAvatarFallback :type="aiType" />
         </div>
-        
-        <!-- 用户消息 -->
-        <div v-else class="message user-message" :class="[msg.type]">
-          <div class="message-bubble">
-            <div class="message-content">{{ msg.content }}</div>
-            <div class="message-time">{{ formatTime(msg.time) }}</div>
+        <div>
+          <div class="assistant-name">{{ assistantName }}</div>
+          <div class="assistant-hint">{{ assistantHint }}</div>
+        </div>
+      </div>
+      <div class="status-pill" :class="connectionStatus">{{ statusLabel }}</div>
+    </div>
+
+    <div class="chat-messages" ref="messagesContainer">
+      <div
+        v-for="(msg, index) in messages"
+        :key="index"
+        class="message-row"
+        :class="{ 'is-user': msg.isUser }"
+      >
+        <div v-if="!msg.isUser" class="avatar ai-avatar">
+          <AiAvatarFallback :type="aiType" />
+        </div>
+
+        <article class="message-card" :class="[msg.isUser ? 'user-card' : 'ai-card', msg.type]">
+          <div class="message-role">
+            <span>{{ msg.isUser ? '我' : assistantName }}</span>
+            <span>{{ formatTime(msg.time) }}</span>
           </div>
-          <div class="avatar user-avatar">
-            <div class="avatar-placeholder">我</div>
+          <div class="message-content">
+            {{ msg.content }}
+            <span
+              v-if="connectionStatus === 'connecting' && !msg.isUser && index === messages.length - 1"
+              class="typing-dots"
+            >
+              <i></i><i></i><i></i>
+            </span>
           </div>
+        </article>
+
+        <div v-if="msg.isUser" class="avatar user-avatar">
+          <div class="user-avatar-badge">我</div>
         </div>
       </div>
     </div>
 
-    <!-- 输入区域 -->
-    <div class="chat-input-container">
-      <div class="chat-input">
-        <textarea 
-          v-model="inputMessage" 
-          @keydown.enter.prevent="sendMessage"
-          placeholder="请输入消息..." 
-          class="input-box"
-          :disabled="connectionStatus === 'connecting'"
-        ></textarea>
-        <button 
-          @click="sendMessage" 
+    <div class="composer">
+      <textarea
+        ref="inputRef"
+        v-model="inputMessage"
+        class="input-box"
+        :placeholder="placeholderText"
+        :disabled="connectionStatus === 'connecting'"
+        rows="1"
+        @input="resizeInput"
+        @keydown.enter.exact.prevent="sendMessage"
+      ></textarea>
+
+      <div class="composer-footer">
+        <span class="composer-hint-text">Enter 发送，Shift + Enter 换行</span>
+        <button
           class="send-button"
+          type="button"
           :disabled="connectionStatus === 'connecting' || !inputMessage.trim()"
-        >发送</button>
+          @click="sendMessage"
+        >
+          {{ connectionStatus === 'connecting' ? '生成中...' : '发送' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import AiAvatarFallback from './AiAvatarFallback.vue'
 
 const props = defineProps({
@@ -67,37 +88,48 @@ const props = defineProps({
   },
   aiType: {
     type: String,
-    default: 'default'  // 'love' 或 'super'
+    default: 'default'
   }
 })
 
 const emit = defineEmits(['send-message'])
 
 const inputMessage = ref('')
+const inputRef = ref(null)
 const messagesContainer = ref(null)
 
-// 根据AI类型选择不同头像
-const aiAvatar = computed(() => {
-  return props.aiType === 'love' 
-    ? '/ai-love-avatar.png'  // 恋爱大师头像
-    : '/ai-super-avatar.png' // 超级智能体头像
+const assistantName = computed(() => (props.aiType === 'love' ? 'AI 恋爱顾问' : 'AI 超级智能体'))
+const assistantHint = computed(() =>
+  props.aiType === 'love' ? '更适合情感建议与沟通表达' : '更适合任务执行与综合问答'
+)
+const placeholderText = computed(() =>
+  props.aiType === 'love'
+    ? '描述一下你的情况，比如当前关系、聊天困扰或你想达成的目标...'
+    : '输入任务、问题或你想让智能体协助完成的事情...'
+)
+const statusLabel = computed(() => {
+  if (props.connectionStatus === 'connecting') return '实时生成中'
+  if (props.connectionStatus === 'error') return '连接异常'
+  return '已准备好'
 })
 
-// 发送消息
 const sendMessage = () => {
-  if (!inputMessage.value.trim()) return
-  
-  emit('send-message', inputMessage.value)
+  const message = inputMessage.value.trim()
+  if (!message) return
+
+  emit('send-message', message)
   inputMessage.value = ''
+  resetInputHeight()
 }
 
-// 格式化时间
 const formatTime = (timestamp) => {
   const date = new Date(timestamp)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
-// 自动滚动到底部
 const scrollToBottom = async () => {
   await nextTick()
   if (messagesContainer.value) {
@@ -105,288 +137,306 @@ const scrollToBottom = async () => {
   }
 }
 
-// 监听消息变化与内容变化，自动滚动
-watch(() => props.messages.length, () => {
-  scrollToBottom()
-})
+const resizeInput = () => {
+  if (!inputRef.value) return
+  inputRef.value.style.height = 'auto'
+  inputRef.value.style.height = `${Math.min(inputRef.value.scrollHeight, 168)}px`
+}
 
-watch(() => props.messages.map(m => m.content).join(''), () => {
-  scrollToBottom()
-})
+const resetInputHeight = async () => {
+  await nextTick()
+  if (inputRef.value) {
+    inputRef.value.style.height = 'auto'
+  }
+}
+
+watch(
+  () => props.messages,
+  () => {
+    scrollToBottom()
+  },
+  { deep: true }
+)
 
 onMounted(() => {
+  resizeInput()
   scrollToBottom()
 })
 </script>
 
 <style scoped>
-.chat-container {
+.chat-card {
   display: flex;
   flex-direction: column;
-  height: 70vh;
-  min-height: 600px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  min-height: 68vh;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(18, 49, 78, 0.08);
+  border-radius: 28px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
   overflow: hidden;
-  position: relative;
+}
+
+.chat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid rgba(18, 49, 78, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.assistant-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assistant-avatar,
+.avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.assistant-name {
+  font-weight: 700;
+  color: #142033;
+}
+
+.assistant-hint {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: #708096;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #eef4f8;
+  color: #506174;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.status-pill.connecting {
+  background: rgba(15, 108, 120, 0.12);
+  color: #0f6c78;
+}
+
+.status-pill.error {
+  background: rgba(224, 122, 79, 0.12);
+  color: #b55b33;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  padding-bottom: 80px; /* 为输入框留出空间 */
+  padding: 24px 22px 8px;
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 72px; /* 与输入框高度相匹配 */
+  gap: 18px;
 }
 
-.message-wrapper {
-  margin-bottom: 16px;
+.message-row {
   display: flex;
-  flex-direction: column;
-  width: 100%;
+  align-items: flex-end;
+  gap: 12px;
 }
 
-.message {
-  display: flex;
-  align-items: flex-start;
-  max-width: 85%;
-  margin-bottom: 8px;
+.message-row.is-user {
+  justify-content: flex-end;
 }
 
-.user-message {
-  margin-left: auto; /* 用户消息靠右 */
-  flex-direction: row; /* 正常顺序，先气泡后头像 */
+.message-card {
+  max-width: min(720px, calc(100% - 56px));
+  padding: 14px 16px;
+  border-radius: 22px;
+  line-height: 1.8;
 }
 
-.ai-message {
-  margin-right: auto; /* AI消息靠左 */
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+.message-role {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.user-avatar {
-  margin-left: 8px; /* 用户头像在右侧，左边距 */
-}
-
-.ai-avatar {
-  margin-right: 8px; /* AI头像在左侧，右边距 */
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
-}
-
-.message-bubble {
-  padding: 12px;
-  border-radius: 18px;
-  position: relative;
-  word-wrap: break-word;
-  min-width: 100px; /* 最小宽度 */
-}
-
-.user-message .message-bubble {
-  background-color: #007bff;
-  color: white;
-  border-bottom-right-radius: 4px;
-  text-align: left;
-}
-
-.ai-message .message-bubble {
-  background-color: #e9e9eb;
-  color: #333;
-  border-bottom-left-radius: 4px;
-  text-align: left;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: #708096;
 }
 
 .message-content {
-  font-size: 16px;
-  line-height: 1.5;
   white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.98rem;
 }
 
-.message-time {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-top: 4px;
-  text-align: right;
+.ai-card {
+  background: #f7fafc;
+  color: #1e293b;
+  border: 1px solid rgba(18, 49, 78, 0.08);
+  border-bottom-left-radius: 10px;
 }
 
-.chat-input-container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
-  z-index: 100;
-  height: 72px; /* 固定高度 */
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+.user-card {
+  background: linear-gradient(135deg, #142033, #2d4f7c);
+  color: #fff;
+  border-bottom-right-radius: 10px;
 }
 
-.chat-input {
-  display: flex;
-  padding: 16px;
-  height: 100%;
-  box-sizing: border-box;
-  align-items: center;
-}
-
-.input-box {
-  flex-grow: 1;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  padding: 10px 16px;
-  font-size: 16px;
-  resize: none;
-  min-height: 20px;
-  max-height: 40px; /* 限制高度 */
-  outline: none;
-  transition: border-color 0.3s;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE & Edge */
-}
-
-/* 隐藏Webkit浏览器的滚动条 */
-.input-box::-webkit-scrollbar {
-  display: none;
-}
-
-.input-box:focus {
-  border-color: #007bff;
-}
-
-.send-button {
-  margin-left: 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 0 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  height: 40px;
-  align-self: center;
-}
-
-.send-button:hover:not(:disabled) {
-  background-color: #0069d9;
-}
-
-.typing-indicator {
-  display: inline-block;
-  animation: blink 0.7s infinite;
-  margin-left: 2px;
-}
-
-@keyframes blink {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.input-box:disabled, .send-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .message {
-    max-width: 95%;
-  }
-  
-  .message-content {
-    font-size: 15px;
-  }
-  
-  .chat-input {
-    padding: 12px;
-  }
-  
-  .input-box {
-    padding: 8px 12px;
-  }
-  
-  .send-button {
-    padding: 0 15px;
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .message-bubble {
-    padding: 10px;
-  }
-  
-  .message-content {
-    font-size: 14px;
-  }
-  
-  .chat-input-container {
-    height: 64px;
-  }
-  
-  .chat-messages {
-    bottom: 64px;
-  }
-}
-
-/* 新增：不同类型消息的样式 */
-.ai-answer {
-  animation: fadeIn 0.3s ease-in-out;
+.user-card .message-role {
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .ai-final {
-  /* 最终回答，可以有不同的样式，例如边框高亮等 */
+  box-shadow: inset 0 0 0 1px rgba(15, 108, 120, 0.12);
 }
 
 .ai-error {
-  opacity: 0.7;
+  background: #fff4ed;
+  border-color: rgba(224, 122, 79, 0.18);
 }
 
-.user-question {
-  /* 用户提问的特殊样式 */
+.user-avatar-badge {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #142033, #2d4f7c);
+  color: #fff;
+  font-weight: 700;
 }
 
-/* 连续消息气泡样式 */
-.ai-message + .ai-message {
-  margin-top: 4px;
+.composer {
+  padding: 18px 22px 22px;
+  border-top: 1px solid rgba(18, 49, 78, 0.08);
+  background: rgba(255, 255, 255, 0.9);
 }
 
-.ai-message + .ai-message .avatar {
-  visibility: hidden;
+.input-box {
+  width: 100%;
+  min-height: 52px;
+  max-height: 168px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(18, 49, 78, 0.1);
+  background: #f9fbfd;
+  color: #142033;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ai-message + .ai-message .message-bubble {
-  border-top-left-radius: 10px;
+.input-box:focus {
+  border-color: rgba(15, 108, 120, 0.34);
+  box-shadow: 0 0 0 4px rgba(15, 108, 120, 0.08);
 }
-</style> 
+
+.input-box:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.composer-hint-text {
+  color: #7f8ba0;
+  font-size: 0.86rem;
+}
+
+.send-button {
+  min-width: 110px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0f6c78, #365f94);
+  color: #fff;
+  font-size: 0.96rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.send-button:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.typing-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+  animation: pulse 1s infinite ease-in-out;
+}
+
+.typing-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 0.75;
+  }
+}
+
+@media (max-width: 720px) {
+  .chat-toolbar,
+  .chat-messages,
+  .composer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .chat-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .message-card {
+    max-width: calc(100% - 42px);
+  }
+
+  .composer-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .send-button {
+    width: 100%;
+  }
+}
+</style>

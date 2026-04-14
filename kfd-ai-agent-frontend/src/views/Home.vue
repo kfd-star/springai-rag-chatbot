@@ -1,49 +1,94 @@
 <template>
-  <div class="home-container">
-    <div class="header">
-      <div class="glitch-wrapper">
-        <h1 class="glitch-title">kfdAI超级智能体</h1>
-      </div>
-      <p class="subtitle">/ 探索AI的无限可能 /</p>
-      <div class="cyber-line"></div>
-    </div>
-    
-    <div class="apps-container">
-      <div class="app-card" @click="navigateTo('/love-master')">
-        <div class="card-glow"></div>
-        <div class="app-icon love-icon">❤️</div>
-        <div class="app-info">
-          <div class="app-title">AI恋爱大师</div>
-          <div class="app-desc">智能情感顾问，帮你解答恋爱烦恼</div>
-        </div>
-        <div class="app-button">
-          <span class="btn-text">立即体验</span>
-          <span class="btn-icon">→</span>
+  <main class="home-page">
+    <section class="hero-section">
+      <div class="hero-copy">
+        <p class="eyebrow">PROJECT OVERVIEW</p>
+        <h1 class="hero-title">Spring AI 智能体项目</h1>
+        <p class="hero-description">
+          这是一个围绕情感咨询与通用智能体场景构建的完整项目，包含 Spring Boot 后端、Vue 3
+          前端、RAG、Tool Calling、MCP 子模块与 SSE 流式响应。
+        </p>
+
+        <div class="hero-tags">
+          <span>Spring Boot 3</span>
+          <span>Spring AI</span>
+          <span>Vue 3</span>
+          <span>SSE</span>
+          <span>MCP</span>
         </div>
       </div>
-      
-      <div class="app-card" @click="navigateTo('/super-agent')">
-        <div class="card-glow"></div>
-        <div class="app-icon robot-icon">🤖</div>
-        <div class="app-info">
-          <div class="app-title">AI超级智能体</div>
-          <div class="app-desc">全能型AI助手，解决各类专业问题</div>
-        </div>
-        <div class="app-button">
-          <span class="btn-text">立即体验</span>
-          <span class="btn-icon">→</span>
+
+      <div class="hero-panel">
+        <div class="panel-title">项目组成</div>
+        <div class="panel-grid">
+          <article>
+            <strong>后端服务</strong>
+            <p>负责对话、工具调用、RAG、智能体执行链路与接口输出。</p>
+          </article>
+          <article>
+            <strong>前端页面</strong>
+            <p>负责聊天交互、SSE 消息展示与应用入口组织。</p>
+          </article>
+          <article>
+            <strong>MCP 子模块</strong>
+            <p>提供独立的图片搜索服务，便于后续扩展接入。</p>
+          </article>
         </div>
       </div>
-    </div>
-    
-    <div class="cyber-circles">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
-    
+    </section>
+
+    <section class="workspace-grid">
+      <article class="entry-card warm-card" @click="navigateTo('/love-master')">
+        <div class="entry-header">
+          <span class="entry-tag">业务应用</span>
+          <span class="entry-icon">恋</span>
+        </div>
+        <h2>AI 恋爱顾问</h2>
+        <p>面向情感咨询场景，支持多轮对话、上下文承接与流式回复展示。</p>
+        <div class="entry-points">
+          <span>多轮对话</span>
+          <span>上下文记忆</span>
+          <span>SSE 响应</span>
+        </div>
+        <button class="entry-button" type="button">进入页面</button>
+      </article>
+
+      <article class="entry-card cool-card" @click="navigateTo('/super-agent')">
+        <div class="entry-header">
+          <span class="entry-tag">智能体应用</span>
+          <span class="entry-icon">智</span>
+        </div>
+        <h2>AI 超级智能体</h2>
+        <p>用于展示通用任务处理过程，适合观察更长链路的输出与执行反馈。</p>
+        <div class="entry-points">
+          <span>任务处理</span>
+          <span>过程输出</span>
+          <span>工具调用</span>
+        </div>
+        <button class="entry-button" type="button">进入页面</button>
+      </article>
+    </section>
+
+    <section class="feature-grid">
+      <article class="feature-card">
+        <span class="feature-index">01</span>
+        <h3>核心能力</h3>
+        <p>项目已接入对话、RAG、工具调用、结构化输出与流式接口等关键能力。</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-index">02</span>
+        <h3>模块结构</h3>
+        <p>前后端分离，主服务与 MCP 子模块拆分清晰，便于继续开发与部署。</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-index">03</span>
+        <h3>项目用途</h3>
+        <p>既可以作为学习 Spring AI 的参考项目，也可以继续扩展成自己的完整应用。</p>
+      </article>
+    </section>
+
     <AppFooter />
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -51,17 +96,16 @@ import { useRouter } from 'vue-router'
 import { useHead } from '@vueuse/head'
 import AppFooter from '../components/AppFooter.vue'
 
-// 设置页面标题和元数据
 useHead({
-  title: 'kfdAI超级智能体应用平台 - 首页',
+  title: 'Spring AI 智能体项目',
   meta: [
     {
       name: 'description',
-      content: 'kfdAI超级智能体应用平台提供AI恋爱大师和AI超级智能体服务，满足您的各种AI对话需求'
+      content: '基于 Spring AI 的完整项目，包含多轮对话、RAG、Tool Calling、MCP 与 SSE 流式交互。'
     },
     {
       name: 'keywords',
-      content: 'AI智能体,AI应用,AI恋爱大师,AI助手,智能对话,kfd,AI超级智能体,首页'
+      content: 'Spring AI, RAG, Tool Calling, MCP, SSE, 智能体, Vue 3'
     }
   ]
 })
@@ -74,451 +118,334 @@ const navigateTo = (path) => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
-
-/* 全局样式变量 */
-:root {
-  --neon-blue: #00f0ff;
-  --neon-purple: #9000ff;
-  --neon-pink: #ff00d4;
-  --cyber-black: #0a0a12;
-  --cyber-dark: #111122;
-  --cyber-light: #edf7ff;
-}
-
-.home-container {
-  display: flex;
-  flex-direction: column;
+.home-page {
   min-height: 100vh;
-  background-color: var(--cyber-dark);
-  background-image: 
-    linear-gradient(0deg, rgba(8, 17, 34, 0.9), rgba(5, 8, 20, 0.9)),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="1" fill="%23111133" opacity="0.3"/><rect x="0" y="0" width="1" height="100" fill="%23111133" opacity="0.3"/></svg>');
-  background-size: auto, 40px 40px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 赛博朋克风格标题 */
-.header {
-  padding: 70px 20px 50px;
-  text-align: center;
-  background-color: transparent;
-  position: relative;
-  z-index: 2;
-}
-
-.glitch-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 20px;
-}
-
-.glitch-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 3.2rem;
-  font-weight: 700;
-  color: var(--cyber-light);
-  text-shadow: 
-    0 0 5px rgba(0, 240, 255, 0.7),
-    0 0 10px rgba(0, 240, 255, 0.5),
-    0 0 20px rgba(0, 240, 255, 0.3);
-  letter-spacing: 2px;
-  position: relative;
-  animation: glitch 3s infinite;
-}
-
-.glitch-title::before,
-.glitch-title::after {
-  content: 'kfdAI超级智能体';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.8;
-}
-
-.glitch-title::before {
-  color: var(--neon-pink);
-  z-index: -1;
-  animation: glitch-anim 2s infinite;
-}
-
-.glitch-title::after {
-  color: var(--neon-blue);
-  z-index: -2;
-  animation: glitch-anim-2 3s infinite;
-}
-
-.subtitle {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 600px;
-  margin: 0 auto 20px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.cyber-line {
-  height: 2px;
-  width: 80%;
-  max-width: 600px;
-  margin: 0 auto;
-  background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
-  position: relative;
-}
-
-.cyber-line::before,
-.cyber-line::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  background-color: var(--neon-blue);
-  border-radius: 50%;
-  transform: translateY(-50%);
-  box-shadow: 0 0 10px 2px var(--neon-blue);
-}
-
-.cyber-line::before {
-  left: 20%;
-}
-
-.cyber-line::after {
-  right: 20%;
-}
-
-.apps-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 50px;
-  max-width: 1200px;
-  margin: 60px auto;
-  padding: 0 20px;
-  flex: 1;
-  position: relative;
-  z-index: 2;
-}
-
-.app-card {
-  width: 340px;
-  background-color: rgba(17, 23, 41, 0.7);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  box-shadow: 
-    0 8px 32px rgba(0, 240, 255, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  padding: 30px;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 32px;
   position: relative;
-  overflow: hidden;
 }
 
-.card-glow {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at center,
-    rgba(var(--neon-blue-rgb), 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.5s;
-  pointer-events: none;
-}
-
-.app-card:hover {
-  transform: translateY(-15px) scale(1.03);
-  box-shadow: 
-    0 15px 50px rgba(0, 240, 255, 0.3),
-    inset 0 0 0 1px rgba(0, 240, 255, 0.5);
-}
-
-.app-card:hover .card-glow {
-  opacity: 1;
-}
-
-.app-icon {
-  font-size: 4rem;
-  margin-bottom: 25px;
-  width: 90px;
-  height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  position: relative;
-  z-index: 1;
-}
-
-.love-icon {
-  background: linear-gradient(135deg, #ff007a, #ff5722);
-  box-shadow: 0 0 20px rgba(255, 0, 122, 0.5);
-}
-
-.robot-icon {
-  background: linear-gradient(135deg, #00b2ff, #4f56ff);
-  box-shadow: 0 0 20px rgba(0, 178, 255, 0.5);
-}
-
-.app-info {
-  text-align: center;
-  margin-bottom: 30px;
-  width: 100%;
-}
-
-.app-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.6rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 12px;
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-}
-
-.app-desc {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
-}
-
-.app-button {
-  background: linear-gradient(90deg, #0088ff, #00b2ff);
-  color: white;
-  padding: 12px 28px;
-  border-radius: 30px;
-  font-weight: 500;
-  transition: all 0.3s;
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(0, 240, 255, 0.3);
-}
-
-.app-button::before {
+.home-page::before,
+.home-page::after {
   content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.7s;
-}
-
-.app-button:hover {
-  box-shadow: 0 0 15px rgba(0, 178, 255, 0.7);
-  transform: scale(1.05);
-}
-
-.app-button:hover::before {
-  left: 100%;
-}
-
-.btn-text {
-  margin-right: 8px;
-  letter-spacing: 1px;
-}
-
-.btn-icon {
-  font-size: 1.2rem;
-  transition: transform 0.3s;
-}
-
-.app-button:hover .btn-icon {
-  transform: translateX(4px);
-}
-
-/* 背景圆圈动画 */
-.cyber-circles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.circle {
-  position: absolute;
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
   border-radius: 50%;
-  opacity: 0.15;
+  filter: blur(18px);
 }
 
-.circle-1 {
+.home-page::before {
+  top: 72px;
+  right: 4%;
+  width: 240px;
+  height: 240px;
+  background: rgba(224, 122, 79, 0.14);
+}
+
+.home-page::after {
+  left: 6%;
+  bottom: 120px;
   width: 300px;
   height: 300px;
-  top: -100px;
-  right: -100px;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-  animation: float 15s infinite alternate;
+  background: rgba(15, 108, 120, 0.12);
 }
 
-.circle-2 {
-  width: 500px;
-  height: 500px;
-  bottom: -200px;
-  left: -200px;
-  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
-  animation: float 20s infinite alternate-reverse;
+.hero-section,
+.workspace-grid,
+.feature-grid {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
-.circle-3 {
-  width: 200px;
-  height: 200px;
-  top: 40%;
-  right: 15%;
-  background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
-  animation: float 12s infinite alternate;
+.hero-section {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(340px, 0.9fr);
+  align-items: stretch;
 }
 
-/* 动画效果 */
-@keyframes float {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  100% {
-    transform: translate(50px, 50px) rotate(10deg);
+.hero-copy,
+.hero-panel,
+.entry-card,
+.feature-card {
+  border: 1px solid rgba(18, 49, 78, 0.08);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-soft);
+}
+
+.hero-copy {
+  padding: 38px;
+  border-radius: 32px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(255, 248, 241, 0.92));
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: #0f6c78;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.hero-description {
+  margin: 20px 0 0;
+  max-width: 720px;
+  font-size: 1.04rem;
+  line-height: 1.9;
+  color: var(--color-text-muted);
+}
+
+.hero-tags {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-tags span,
+.entry-points span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+
+.hero-tags span {
+  background: rgba(15, 108, 120, 0.08);
+  color: #0f5260;
+}
+
+.hero-panel {
+  padding: 28px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(20, 32, 51, 0.95), rgba(32, 56, 86, 0.94));
+  color: #f4f8fc;
+}
+
+.panel-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.panel-grid {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.panel-grid article {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panel-grid strong {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  color: #ffd8bd;
+}
+
+.panel-grid p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.75;
+}
+
+.workspace-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.entry-card {
+  padding: 28px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.84);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.entry-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+}
+
+.warm-card:hover {
+  border-color: rgba(224, 122, 79, 0.24);
+}
+
+.cool-card:hover {
+  border-color: rgba(15, 108, 120, 0.24);
+}
+
+.entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.entry-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(18, 49, 78, 0.06);
+  font-size: 0.9rem;
+  color: #425269;
+}
+
+.entry-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.warm-card .entry-icon {
+  background: linear-gradient(135deg, #e4708a, #ff9a7d);
+  box-shadow: 0 14px 30px rgba(228, 112, 138, 0.28);
+}
+
+.cool-card .entry-icon {
+  background: linear-gradient(135deg, #0f6c78, #365f94);
+  box-shadow: 0 14px 30px rgba(15, 108, 120, 0.28);
+}
+
+.entry-card h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.entry-card p {
+  margin: 14px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.9;
+}
+
+.entry-points {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.warm-card .entry-points span {
+  background: rgba(228, 112, 138, 0.1);
+  color: #a04c69;
+}
+
+.cool-card .entry-points span {
+  background: rgba(15, 108, 120, 0.1);
+  color: #0c5c67;
+}
+
+.entry-button {
+  margin-top: 28px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #162033, #27456c);
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.entry-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.feature-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.feature-card {
+  padding: 24px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.feature-index {
+  display: inline-flex;
+  min-width: 48px;
+  height: 38px;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.feature-card h3 {
+  margin: 16px 0 10px;
+  font-size: 1.2rem;
+}
+
+.feature-card p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+@media (max-width: 980px) {
+  .hero-section,
+  .workspace-grid,
+  .feature-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@keyframes glitch {
-  0% {
-    text-shadow: 
-      0 0 5px rgba(0, 240, 255, 0.7),
-      0 0 10px rgba(0, 240, 255, 0.5);
+@media (max-width: 640px) {
+  .home-page {
+    padding: 18px;
+    gap: 20px;
   }
-  50% {
-    text-shadow: 
-      0 0 5px rgba(0, 240, 255, 0.7),
-      0 0 10px rgba(0, 240, 255, 0.5),
-      0 0 20px rgba(0, 240, 255, 0.3);
-  }
-  100% {
-    text-shadow: 
-      0 0 5px rgba(0, 240, 255, 0.7),
-      0 0 10px rgba(0, 240, 255, 0.5);
-  }
-}
 
-@keyframes glitch-anim {
-  0%, 100% {
-    transform: translate(0);
+  .hero-copy,
+  .hero-panel,
+  .entry-card,
+  .feature-card {
+    padding: 22px;
+    border-radius: 24px;
   }
-  20% {
-    transform: translate(-5px, 5px);
-  }
-  40% {
-    transform: translate(-5px, -5px);
-  }
-  60% {
-    transform: translate(5px, 5px);
-  }
-  80% {
-    transform: translate(5px, -5px);
-  }
-}
 
-@keyframes glitch-anim-2 {
-  0%, 100% {
-    transform: translate(0);
+  .hero-title {
+    font-size: 2.2rem;
   }
-  20% {
-    transform: translate(3px, -3px);
-  }
-  40% {
-    transform: translate(3px, 3px);
-  }
-  60% {
-    transform: translate(-3px, -3px);
-  }
-  80% {
-    transform: translate(-3px, 3px);
-  }
-}
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .glitch-title {
-    font-size: 2.5rem;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-  
-  .apps-container {
-    gap: 30px;
-    margin: 40px auto;
-  }
-  
-  .app-card {
-    width: 100%;
-    max-width: 420px;
-    padding: 25px;
-  }
-  
-  .app-icon {
-    font-size: 3.5rem;
-    width: 80px;
-    height: 80px;
+  .entry-card h2 {
+    font-size: 1.52rem;
   }
 }
-
-@media (max-width: 480px) {
-  .header {
-    padding: 50px 15px 40px;
-  }
-  
-  .glitch-title {
-    font-size: 2rem;
-  }
-  
-  .subtitle {
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-  }
-  
-  .apps-container {
-    margin: 30px auto;
-    padding: 0 15px;
-  }
-  
-  .app-card {
-    padding: 20px;
-  }
-  
-  .app-icon {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    width: 70px;
-    height: 70px;
-  }
-  
-  .app-title {
-    font-size: 1.4rem;
-  }
-  
-  .app-desc {
-    font-size: 0.9rem;
-  }
-  
-  .circle-1, .circle-2, .circle-3 {
-    opacity: 0.1;
-  }
-}
-</style> 
+</style>

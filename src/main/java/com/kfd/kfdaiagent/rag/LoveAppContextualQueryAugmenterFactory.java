@@ -4,15 +4,13 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 
 /**
- * 创建上下文查询增强器的工厂
+ * Factory for building a contextual query augmenter.
  */
 public class LoveAppContextualQueryAugmenterFactory {
 
     public static ContextualQueryAugmenter createInstance() {
         PromptTemplate emptyContextPromptTemplate = new PromptTemplate("""
-                你应该输出下面的内容：
-                抱歉，我只能回答恋爱相关的问题，别的没办法帮到您哦，
-                有问题可以联系编程导航客服 https://codefather.cn
+                抱歉，我只能回答情感咨询相关的问题，超出范围的内容暂时无法提供帮助。
                 """);
         return ContextualQueryAugmenter.builder()
                 .allowEmptyContext(false)

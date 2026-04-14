@@ -1,5 +1,8 @@
 ### CUSTOM ###
 application-local.yml
+application-prod.yml
+.env
+.env.*
 tmp
 
 HELP.md

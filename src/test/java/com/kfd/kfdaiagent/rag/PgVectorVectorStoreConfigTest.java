@@ -20,13 +20,12 @@ class PgVectorVectorStoreConfigTest {
     @Test
     void pgVectorVectorStore() {
         List<Document> documents = List.of(
-                new Document("kfd的编程导航有什么用？学编程啊，做项目啊", Map.of("meta1", "meta1")),
-                new Document("程序员kfd的原创项目教程 codefather.cn"),
-                new Document("kfd这小伙子比较帅气", Map.of("meta2", "meta2")));
-        // 添加文档
+                new Document("学习项目开发可以帮助建立完整的软件工程实践能力", Map.of("meta1", "meta1")),
+                new Document("一个公开的示例项目可以帮助理解 RAG 和智能体能力"),
+                new Document("通过语义检索可以提升知识问答场景的相关性", Map.of("meta2", "meta2")));
         pgVectorVectorStore.add(documents);
-        // 相似度查询
-        List<Document> results = pgVectorVectorStore.similaritySearch(SearchRequest.builder().query("怎么学编程啊").topK(3).build());
+        List<Document> results = pgVectorVectorStore.similaritySearch(
+                SearchRequest.builder().query("怎么学习项目开发").topK(3).build());
         Assertions.assertNotNull(results);
     }
 }

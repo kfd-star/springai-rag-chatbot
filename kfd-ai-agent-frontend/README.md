@@ -1,55 +1,49 @@
-# AI智能体应用平台前端
+# AI 智能体前端
 
-这是一个基于Vue3开发的AI智能体应用平台，包含两个核心应用：AI恋爱大师和AI超级智能体。
+这是项目的前端部分，基于 Vue 3 和 Vite 开发，包含恋爱咨询应用与智能体对话页面。
 
-## 功能特点
+## 功能说明
 
-- 💬 **AI恋爱大师**：智能情感顾问，为用户提供恋爱相关的建议和解答
-- 🤖 **AI超级智能体**：全能型AI助手，解决各类专业问题
+- AI 恋爱大师聊天页面
+- AI 智能体聊天页面
+- 基于 SSE 的流式消息展示
+- 通过 `/api` 代理访问后端服务
 
 ## 技术栈
 
-- Vue3
+- Vue 3
 - Vue Router
 - Axios
-- SSE (Server-Sent Events)
+- Vite
 
-## 开发说明
+## 环境要求
 
-### 环境要求
+- Node.js 20+
+- npm 7+
 
-- Node.js >= 16.0.0
-- npm >= 7.0.0
-
-### 安装依赖
+## 安装依赖
 
 ```bash
 npm install
 ```
 
-### 启动开发服务器
+## 启动开发环境
 
 ```bash
 npm run dev
 ```
 
-### 构建项目
+## 构建生产版本
 
 ```bash
 npm run build
 ```
 
-## 后端接口
+## 依赖的后端接口
 
-项目依赖以下后端接口：
+- `/api/ai/love_app/chat/sse`
+- `/api/ai/manus/chat`
 
-- `/api/ai/love_app/chat/sse` - AI恋爱大师聊天接口
-- `/api/ai/manus/chat` - AI超级智能体聊天接口
+默认后端地址为：
 
-后端服务默认运行在 `http://localhost:8123`
-
-# Vue 3 + Vite
-
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+`http://localhost:8123`

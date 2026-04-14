@@ -8,8 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 class MultiQueryExpanderDemoTest {
 
@@ -18,7 +16,7 @@ class MultiQueryExpanderDemoTest {
 
     @Test
     void expand() {
-        List<Query> queries = multiQueryExpanderDemo.expand("啥是程序员kfd啊啊啊啊啊啊？！请回答我哈哈哈哈");
+        List<Query> queries = multiQueryExpanderDemo.expand("如何改进情感咨询系统中的检索召回效果？");
         Assertions.assertNotNull(queries);
     }
 }

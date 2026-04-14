@@ -1,47 +1,70 @@
 <template>
-  <div class="love-master-container">
-    <div class="header">
-      <div class="back-button" @click="goBack">返回</div>
-      <h1 class="title">AI恋爱大师</h1>
-      <div class="chat-id">会话ID: {{ chatId }}</div>
+  <main class="chat-page love-page">
+    <div class="page-shell">
+      <header class="page-header">
+        <button class="back-button" type="button" @click="goBack">返回首页</button>
+
+        <div class="title-block">
+          <p class="eyebrow">PROJECT PAGE</p>
+          <h1>AI 恋爱顾问</h1>
+          <p>情感咨询场景页面，用于展示多轮对话、上下文承接与流式回复效果。</p>
+        </div>
+
+        <div class="header-pills">
+          <span class="pill">SSE 实时响应</span>
+          <span class="pill">{{ connectionText }}</span>
+          <span class="pill subtle">会话 {{ shortChatId }}</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="guide-panel">
+          <span class="panel-title">页面说明</span>
+          <h2>适合测试情感咨询类对话</h2>
+          <p>
+            可以输入关系背景、最近聊天内容或当前困扰，用来观察模型在连续对话中的回复表现。
+          </p>
+          <div class="tip-list">
+            <span>聊天开场</span>
+            <span>回复建议</span>
+            <span>约会安排</span>
+            <span>关系推进</span>
+          </div>
+        </aside>
+
+        <section class="chat-panel">
+          <ChatRoom
+            :messages="messages"
+            :connection-status="connectionStatus"
+            ai-type="love"
+            @send-message="sendMessage"
+          />
+        </section>
+      </section>
     </div>
-    
-    <div class="content-wrapper">
-      <div class="chat-area">
-        <ChatRoom 
-          :messages="messages" 
-          :connection-status="connectionStatus"
-          ai-type="love"
-          @send-message="sendMessage"
-        />
-      </div>
-    </div>
-    
-    <div class="footer-container">
-      <AppFooter />
-    </div>
-  </div>
+
+    <AppFooter />
+  </main>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHead } from '@vueuse/head'
 import ChatRoom from '../components/ChatRoom.vue'
 import AppFooter from '../components/AppFooter.vue'
 import { chatWithLoveApp } from '../api'
 
-// 设置页面标题和元数据
 useHead({
-  title: 'AI恋爱大师 - kfdAI超级智能体应用平台',
+  title: 'AI 恋爱顾问 - Spring AI 智能体实战项目',
   meta: [
     {
       name: 'description',
-      content: 'AI恋爱大师是kfdAI超级智能体应用平台的专业情感顾问，帮你解答各种恋爱问题，提供情感建议'
+      content: '基于 Spring AI 的情感咨询聊天页，支持多轮对话与 SSE 流式响应。'
     },
     {
       name: 'keywords',
-      content: 'AI恋爱大师,情感顾问,恋爱咨询,AI聊天,情感问题,kfd,AI智能体'
+      content: 'AI 恋爱顾问, 情感咨询, Spring AI, SSE'
     }
   ]
 })
@@ -52,193 +75,254 @@ const chatId = ref('')
 const connectionStatus = ref('disconnected')
 let eventSource = null
 
-// 生成随机会话ID
-const generateChatId = () => {
-  return 'love_' + Math.random().toString(36).substring(2, 10)
-}
+const shortChatId = computed(() => (chatId.value ? chatId.value.slice(0, 12) : '--'))
+const connectionText = computed(() => {
+  if (connectionStatus.value === 'connecting') return '生成中'
+  if (connectionStatus.value === 'error') return '连接异常'
+  return '等待提问'
+})
 
-// 添加消息到列表
-const addMessage = (content, isUser) => {
+const generateChatId = () => `love-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+
+const addMessage = (content, isUser, type = '') => {
   messages.value.push({
     content,
     isUser,
-    time: new Date().getTime()
+    type,
+    time: Date.now()
   })
 }
 
-// 发送消息
-const sendMessage = (message) => {
-  addMessage(message, true)
-  
-  // 连接SSE
+const closeStream = () => {
   if (eventSource) {
     eventSource.close()
-  }
-  
-  // 创建一个空的AI回复消息
-  const aiMessageIndex = messages.value.length
-  addMessage('', false)
-  
-  connectionStatus.value = 'connecting'
-  eventSource = chatWithLoveApp(message, chatId.value)
-  
-  // 监听SSE消息
-  eventSource.onmessage = (event) => {
-    const data = event.data
-    if (data && data !== '[DONE]') {
-      // 更新最新的AI消息内容，而不是创建新消息
-      if (aiMessageIndex < messages.value.length) {
-        messages.value[aiMessageIndex].content += data
-      }
-    }
-    
-    if (data === '[DONE]') {
-      connectionStatus.value = 'disconnected'
-      eventSource.close()
-    }
-  }
-  
-  // 监听SSE错误
-  eventSource.onerror = (error) => {
-    console.error('SSE Error:', error)
-    connectionStatus.value = 'error'
-    eventSource.close()
+    eventSource = null
   }
 }
 
-// 返回主页
+const sendMessage = (message) => {
+  addMessage(message, true, 'user-question')
+  closeStream()
+
+  const aiMessageIndex = messages.value.length
+  addMessage('', false, 'ai-answer')
+
+  connectionStatus.value = 'connecting'
+  eventSource = chatWithLoveApp(message, chatId.value)
+
+  eventSource.onmessage = (event) => {
+    const data = event.data
+
+    if (data && data !== '[DONE]' && aiMessageIndex < messages.value.length) {
+      messages.value[aiMessageIndex].content += data
+    }
+
+    if (data === '[DONE]') {
+      if (aiMessageIndex < messages.value.length) {
+        messages.value[aiMessageIndex].type = 'ai-final'
+      }
+      connectionStatus.value = 'disconnected'
+      closeStream()
+    }
+  }
+
+  eventSource.onerror = () => {
+    connectionStatus.value = 'error'
+    if (aiMessageIndex < messages.value.length) {
+      const fallback = messages.value[aiMessageIndex]
+      fallback.content = fallback.content || '连接出现异常，请稍后重试。'
+      fallback.type = 'ai-error'
+    }
+    closeStream()
+  }
+}
+
 const goBack = () => {
   router.push('/')
 }
 
-// 页面加载时添加欢迎消息
 onMounted(() => {
-  // 生成聊天ID
   chatId.value = generateChatId()
-  
-  // 添加欢迎消息
-  addMessage('欢迎来到AI恋爱大师，请告诉我你的恋爱问题，我会尽力给予帮助和建议。', false)
+  addMessage(
+    '你好，我是 AI 恋爱顾问。你可以告诉我你的关系背景、最近的聊天内容，或者你现在最想解决的情感问题。',
+    false,
+    'ai-final'
+  )
 })
 
-// 组件销毁前关闭SSE连接
 onBeforeUnmount(() => {
-  if (eventSource) {
-    eventSource.close()
-  }
+  closeStream()
 })
 </script>
 
 <style scoped>
-.love-master-container {
+.chat-page {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #fff9f9;
+  gap: 28px;
+  padding: 28px;
 }
 
-.header {
+.love-page {
+  background:
+    radial-gradient(circle at top right, rgba(228, 112, 138, 0.14), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(255, 154, 125, 0.14), transparent 26%),
+    transparent;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 22px;
+  flex: 1;
+}
+
+.page-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(18, 49, 78, 0.08);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+  align-items: start;
+}
+
+.back-button,
+.pill {
+  display: inline-flex;
   align-items: center;
-  padding: 16px 24px;
-  background-color: #ff6b8b;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  justify-content: center;
+  border-radius: 999px;
 }
 
 .back-button {
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.2s;
+  height: fit-content;
+  padding: 12px 16px;
+  background: #142033;
+  color: #fff;
+  font-weight: 700;
 }
 
-.back-button:hover {
-  opacity: 0.8;
+.title-block h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.1;
 }
 
-.back-button:before {
-  content: '←';
-  margin-right: 8px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
+.title-block p:last-child {
   margin: 0;
+  color: #66768c;
+  line-height: 1.8;
+  max-width: 680px;
 }
 
-.chat-id {
-  font-size: 14px;
-  opacity: 0.8;
+.eyebrow,
+.panel-title {
+  display: inline-flex;
+  color: #c05877;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
 }
 
-.content-wrapper {
+.header-pills {
   display: flex;
-  flex-direction: column;
-  flex: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.chat-area {
-  flex: 1;
-  padding: 16px;
-  overflow: hidden;
-  position: relative;
-  /* 设置最小高度确保内容显示正常 */
-  min-height: calc(100vh - 56px - 180px); /* 100vh减去头部高度和页脚高度 */
-  margin-bottom: 16px; /* 为页脚留出空间 */
+.pill {
+  padding: 10px 14px;
+  background: rgba(228, 112, 138, 0.1);
+  color: #a34f69;
+  font-size: 0.9rem;
 }
 
-.footer-container {
-  margin-top: auto;
+.pill.subtle {
+  background: rgba(18, 49, 78, 0.06);
+  color: #516276;
 }
 
-/* 响应式样式 */
-@media (max-width: 768px) {
-  .header {
-    padding: 12px 16px;
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.guide-panel {
+  padding: 24px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(255, 247, 247, 0.92), rgba(255, 240, 235, 0.92));
+  border: 1px solid rgba(228, 112, 138, 0.12);
+  box-shadow: var(--shadow-soft);
+}
+
+.guide-panel h2 {
+  margin: 12px 0 10px;
+  font-size: 1.45rem;
+  line-height: 1.3;
+}
+
+.guide-panel p {
+  margin: 0;
+  color: #6d7686;
+  line-height: 1.8;
+}
+
+.tip-list {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tip-list span {
+  display: inline-flex;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(228, 112, 138, 0.12);
+  color: #a34f69;
+  font-size: 0.9rem;
+}
+
+.chat-panel {
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  .page-header,
+  .workspace {
+    grid-template-columns: 1fr;
   }
-  
-  .title {
-    font-size: 18px;
-  }
-  
-  .chat-id {
-    font-size: 12px;
-  }
-  
-  .chat-area {
-    padding: 12px;
-    min-height: calc(100vh - 48px - 160px); /* 调整计算值 */
-    margin-bottom: 12px;
+
+  .header-pills {
+    justify-content: flex-start;
   }
 }
 
-@media (max-width: 480px) {
-  .header {
-    padding: 10px 12px;
+@media (max-width: 640px) {
+  .chat-page {
+    padding: 18px;
+    gap: 18px;
   }
-  
-  .back-button {
-    font-size: 14px;
+
+  .page-header,
+  .guide-panel {
+    padding: 20px;
+    border-radius: 24px;
   }
-  
-  .title {
-    font-size: 16px;
-  }
-  
-  .chat-id {
-    display: none;
-  }
-  
-  .chat-area {
-    padding: 8px;
-    min-height: calc(100vh - 42px - 150px); /* 再次调整计算值 */
-    margin-bottom: 8px;
+
+  .title-block h1 {
+    font-size: 2rem;
   }
 }
-</style> 
+</style>

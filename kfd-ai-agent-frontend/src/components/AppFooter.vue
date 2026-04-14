@@ -1,156 +1,95 @@
 <template>
   <footer class="app-footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <div class="footer-logo">
-          <h3>kfdAI超级智能体应用平台</h3>
-        </div>
-        <div class="footer-links">
-          <a href="#">《用户协议》</a>
-          <a href="#">《隐私政策》</a>
-        </div>
+    <div class="footer-inner">
+      <div class="footer-block">
+        <p class="footer-title">Spring AI 智能体项目</p>
+        <p class="footer-text">
+          前端基于 Vue 3 + Vite，负责页面路由、聊天交互与 SSE 流式消息展示。
+        </p>
       </div>
-      
-      <div class="footer-section">
-        <h4>联系我们</h4>
-        <div class="footer-links">
-          <a href="#">站长：kfd</a>
-        </div>
+
+      <div class="footer-tags">
+        <span>Vue 3</span>
+        <span>Vite</span>
+        <span>SSE</span>
+        <span>Axios</span>
       </div>
     </div>
-    
-    <div class="footer-bottom">
-      <p>© {{ currentYear }} kfdAI超级智能体应用平台 - 让AI为你服务</p>
-    </div>
+
+    <div class="footer-bottom">© {{ currentYear }} Spring AI Project</div>
   </footer>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 
-// 计算当前年份
 const currentYear = computed(() => new Date().getFullYear())
 </script>
 
 <style scoped>
 .app-footer {
-  background-color: #fff;
-  padding: 40px 0 20px;
-  color: #666;
-  border-top: 1px solid #eee;
-  width: 100%;
   margin-top: auto;
-  position: relative;
-  z-index: 2;
+  padding: 22px 24px 24px;
+  background: rgba(255, 255, 255, 0.66);
+  border-top: 1px solid rgba(18, 49, 78, 0.08);
+  backdrop-filter: blur(14px);
 }
 
-.footer-content {
+.footer-inner {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  gap: 20px;
 }
 
-.footer-section {
-  flex: 1;
-  min-width: 200px;
-  margin-bottom: 30px;
-  padding: 0 15px;
-}
-
-.footer-logo h3 {
-  font-size: 1.25rem;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.footer-section h4 {
+.footer-title {
+  margin: 0;
   font-size: 1rem;
-  margin-bottom: 15px;
-  color: #333;
+  font-weight: 700;
+  color: #1f2f45;
 }
 
-.footer-links {
+.footer-text {
+  margin: 8px 0 0;
+  color: #5f6c82;
+  line-height: 1.7;
+}
+
+.footer-tags {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.footer-links a {
-  margin-bottom: 10px;
-  color: #666;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.footer-links a:hover {
-  color: #007bff;
-}
-
-.qrcode {
-  display: flex;
-  align-items: center;
-}
-
-.qrcode-container {
-  text-align: center;
-}
-
-.qrcode-placeholder {
-  width: 90px;
-  height: 90px;
-  background-color: #f5f5f5;
-  margin: 0 auto 10px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-}
-
-.qrcode-placeholder:after {
-  content: '🤖';
-}
-
-.footer-bottom {
-  text-align: center;
-  padding-top: 20px;
-  margin-top: 20px;
-  border-top: 1px solid #eee;
-  color: #999;
+.footer-tags span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f3f7fb;
+  color: #243247;
   font-size: 0.9rem;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .footer-content {
+.footer-bottom {
+  max-width: 1200px;
+  margin: 18px auto 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(18, 49, 78, 0.08);
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 860px) {
+  .footer-inner {
     flex-direction: column;
-  }
-  
-  .footer-section {
-    width: 100%;
-    margin-bottom: 20px;
-    padding: 0;
+    align-items: flex-start;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .app-footer {
-    padding: 30px 0 15px;
-  }
-  
-  .footer-section h4 {
-    font-size: 0.95rem;
-  }
-  
-  .footer-links a {
-    font-size: 0.9rem;
-  }
-  
-  .qrcode-placeholder {
-    width: 80px;
-    height: 80px;
+    padding: 20px 16px 22px;
   }
 }
-</style> 
+</style>

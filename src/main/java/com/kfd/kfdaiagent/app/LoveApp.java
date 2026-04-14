@@ -9,7 +9,6 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
@@ -19,6 +18,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -125,12 +125,6 @@ public class LoveApp {
     private VectorStore loveAppVectorStore;
 
     @Resource
-    private Advisor loveAppRagCloudAdvisor;
-
-    @Resource
-    private VectorStore pgVectorVectorStore;
-
-    @Resource
     private QueryRewriter queryRewriter;
 
     /**
@@ -197,7 +191,7 @@ public class LoveApp {
 
     // AI 调用 MCP 服务
 
-    @Resource
+    @Autowired(required = false)
     private ToolCallbackProvider toolCallbackProvider;
 
     /**
@@ -208,6 +202,9 @@ public class LoveApp {
      * @return
      */
     public String doChatWithMcp(String message, String chatId) {
+        if (toolCallbackProvider == null) {
+            return "MCP service is disabled in the current deployment.";
+        }
         ChatResponse chatResponse = chatClient
                 .prompt()
                 .user(message)
